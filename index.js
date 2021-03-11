@@ -1,5 +1,3 @@
-//const http = require("http");
-//const hostname = "localhost:3000";
 const express = require('express');
 
 //Import a body parser module to be able to access the request body as json
@@ -32,8 +30,8 @@ var tasks = new Map([
     [ "3", { id: '3', boardId: '3', taskName: "Prepare assignment 2", dateCreated: new Date(Date.UTC(2021, 00, 10, 16, 00)), archived: true } ]
 ]);
 
-var boardid = 4;
-var taskid = 4;
+var curBoardId = 4;
+var curTaskId = 4;
 
 // Returns true if all tasks of a board are archived
 function allArchived(bId) {
@@ -85,18 +83,26 @@ app.get("/api/v1/boards/:boardId", (req, res) => {
 // Create new board
 app.post("/api/v1/boards", (req, res) => {
     if(req.body === undefined || req.body.name === undefined || req.body.description === undefined) {
+        // The name and description fields not provided in the body
         res.status(400).json({'message': "The name and description fields are required in the request body."});
+    } else if(typeof req.body.name !== "string") {
+        // The name field is not a string
+        res.status(400).json({'message': "The name field must be a string."});
+    } else if(typeof req.body.description !== "string") {
+        // The description field is not a string
+        res.status(400).json({'message': "The description field must be a string."});
     } else if(req.body.name === "") {
+        // The 
         res.status(400).json({'message': "The name field cannot be empty."});
     } else {
-        boards.set(boardid.toString(), {
-            id: boardid.toString(),
+        boards.set(curBoardId.toString(), {
+            id: curBoardId.toString(),
             name: req.body.name,
             description: req.body.description,
             tasks: new Set()
         });
-        res.status(201).json(boardData(boardid.toString()));
-        boardid++;
+        res.status(201).json(boardData(curBoardId.toString()));
+        curBoardId++;
     }
 });
 
@@ -106,6 +112,10 @@ app.put("/api/v1/boards/:boardId", (req, res) => {
         res.status(404).json({'message': "Board with id " + req.params.boardId + " does not exist."});
     } else if(req.body === undefined || req.body.name === undefined || req.body.description === undefined) {
         res.status(400).json({'message': "The name and description fields are required in the request body."});
+    } else if(typeof req.body.name !== "string") {
+        res.status(400).json({'message': "The name field must be a string."});
+    } else if(typeof req.body.description !== "string") {
+        res.status(400).json({'message': "The description field must be a string."});
     } else if(req.body.name === "") {
         res.status(400).json({'message': "The name field cannot be empty."});
     } else if(!allArchived(req.params.boardId)) {
@@ -124,9 +134,8 @@ app.delete("/api/v1/boards/:boardId", (req, res) => {
     } else if(!allArchived(req.params.boardId)) {
         res.status(400).json({'message': "Board with id " + req.params.boardId + " has unarchived tasks."});
     } else {
-        let board = boardData(req.params.boardId);
+        res.status(200).json(boardData(req.params.boardId));
         boards.delete(req.params.boardId);
-        res.status(200).json(board);
     }
 });
 
@@ -135,8 +144,8 @@ app.delete("/api/v1/boards", (req, res) => {
     res.status(200).json(Array.from(boards.values()).map(board=>boardData(board.id,true)));
     boards = new Map();
     tasks = new Map();
-    boardid = 0;
-    taskid = 0;
+    curBoardId = 0;
+    curTaskId = 0;
 });
 
 // Read all tasks for a board
@@ -176,17 +185,19 @@ app.post("/api/v1/boards/:boardId/tasks", (req, res) => {
         res.status(404).json({'message': "Board with id " + req.params.boardId + " does not exist."});
     } else if(req.body === undefined || req.body.taskName === undefined) {
         res.status(400).json({'message': "The taskName field is required in the request body."});
+    } else if(typeof req.body.taskName !== "string") {
+        res.status(400).json({'message': "The taskName field must be a string."});
     } else {
-        boards.get(req.params.boardId).tasks.add(taskid.toString());
-        tasks.set(taskid.toString(),{
-            id: taskid.toString(),
+        boards.get(req.params.boardId).tasks.add(curTaskId.toString());
+        tasks.set(curTaskId.toString(),{
+            id: curTaskId.toString(),
             boardId: req.params.boardId,
             taskName: req.body.taskName,
             dateCreated: new Date(),
             archived: false
         });
-        res.status(201).json(taskData(taskid.toString()));
-        taskid++;
+        res.status(201).json(taskData(curTaskId.toString()));
+        curTaskId++;
     }
 });
 
@@ -214,16 +225,27 @@ app.patch("/api/v1/boards/:boardId/tasks/:taskId", (req, res) => {
         res.status(404).json({'message': "Task with id " + req.params.taskId + " does not exist."});
     } else if (!boards.get(req.params.boardId).tasks.has(req.params.taskId)) {
         res.status(404).json({'message': "Board with id " + req.params.boardId + " has no task with id " + req.params.taskId + "."});
-    } else if (req.body === undefined){
-        res.status(404).json({'message': "At least 1 field must be provided."});
+    } else if (req.body === undefined || (req.body.taskName === undefined && req.archived === undefined && req.boardId === undefined)){
+        res.status(400).json({'message': "At least 1 field must be provided."});
     } else {
         if (req.body.taskName !== undefined) {
+            if(typeof req.body.taskName !== "string") {
+                return res.status(400).json({'message': "The taskName field must be a string."});
+            }
             tasks.get(req.params.taskId).taskName = req.body.taskName;
         }
         if (req.body.archived !== undefined) {
+            if(typeof req.body.taskName !== "boolean") {
+                return res.status(400).json({'message': "The archived field must be a boolean."});
+            }
             tasks.get(req.params.taskId).archived = req.body.archived;
         }
         if (req.body.boardId !== undefined) {
+            if(typeof req.body.taskName !== "string") {
+                return res.status(400).json({'message': "The boardId field must be a numeric string."});
+            } else if(!boards.has(req.body.boardId)) {
+                return res.status(404).json({'message': "Board with id " + req.body.boardId + " does not exist."});
+            }
             tasks.get(req.params.taskId).boardId = req.body.boardId;
             boards.get(req.params.boardId).tasks.delete(req.params.taskId);
             boards.get(req.body.boardId).tasks.add(req.params.taskId);
@@ -233,40 +255,10 @@ app.patch("/api/v1/boards/:boardId/tasks/:taskId", (req, res) => {
 });
 
 //Unsuppoerted endpoints
-app.use('*', (req, res) => {
-    res.status(405).send('Operation not supported.');
+app.use("*", (req, res) => {
+    res.status(405).send("Operation not supported.");
 });
 
 app.listen(port, () => {
-    console.log('Event app listening...');
+    console.log("Event app listening...");
 });
-
-
-/*var server = http.createServer((req, res) => {
-    let info = new URL(request.url, hostname);
-
-    if(req.method == "GET") {
-        // Get requests here
-
-        // Read all boards
-        if(info.pathname == "/api/v1/boards") {
-            response.end(JSON.stringify({
-                boards: boards.map((board) => {
-                    let {tasks, ...b} = board;
-                    return b;
-                })
-            }));
-        }
-    }
-    else if(request.method == "POST") {
-        // Post requests here
-    }
-    else if(request.method == "DELETE") {
-        // Delete requests here
-    }
-    else if(request.method == "PATCH") {
-        // Patch requests here
-    }
-});
-
-server.listen(3000);*/
