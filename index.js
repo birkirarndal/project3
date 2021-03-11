@@ -18,20 +18,20 @@ app.use(bodyParser.json());
 app.use(cors());  
 
 var boards = new Map([
-    [ "0", { id: '0', name: "Planned", description: "Everything that's on the todo list.", tasks: new Set(["0","1","2"]) } ],
-    [ "1", { id: '1', name: "Ongoing", description: "Currently in progress.", tasks: new Set([]) } ],
-    [ "3", { id: '3', name: "Done", description: "Completed tasks.", tasks: new Set(["3"]) } ]
+    //[ "0", { id: '0', name: "Planned", description: "Everything that's on the todo list.", tasks: new Set(["0","1","2"]) } ],
+    //[ "1", { id: '1', name: "Ongoing", description: "Currently in progress.", tasks: new Set([]) } ],
+    //[ "3", { id: '3', name: "Done", description: "Completed tasks.", tasks: new Set(["3"]) } ]
 ]);
 
 var tasks = new Map([
-    [ "0", { id: '0', boardId: '0', taskName: "Another task", dateCreated: new Date(Date.UTC(2021, 00, 21, 15, 48)), archived: false } ],
-    [ "1", { id: '1', boardId: '0', taskName: "Prepare exam draft", dateCreated: new Date(Date.UTC(2021, 00, 21, 16, 48)), archived: false } ],
-    [ "2", { id: '2', boardId: '0', taskName: "Discuss exam organisation", dateCreated: new Date(Date.UTC(2021, 00, 21, 14, 48)), archived: false } ],
-    [ "3", { id: '3', boardId: '3', taskName: "Prepare assignment 2", dateCreated: new Date(Date.UTC(2021, 00, 10, 16, 00)), archived: true } ]
+    //[ "0", { id: '0', boardId: '0', taskName: "Another task", dateCreated: new Date(Date.UTC(2021, 00, 21, 15, 48)), archived: false } ],
+    //[ "1", { id: '1', boardId: '0', taskName: "Prepare exam draft", dateCreated: new Date(Date.UTC(2021, 00, 21, 16, 48)), archived: false } ],
+    //[ "2", { id: '2', boardId: '0', taskName: "Discuss exam organisation", dateCreated: new Date(Date.UTC(2021, 00, 21, 14, 48)), archived: false } ],
+    //[ "3", { id: '3', boardId: '3', taskName: "Prepare assignment 2", dateCreated: new Date(Date.UTC(2021, 00, 10, 16, 00)), archived: true } ]
 ]);
 
-var curBoardId = 4;
-var curTaskId = 4;
+var curBoardId = 0;//4;
+var curTaskId = 0;//4;
 
 // Returns true if all tasks of a board are archived
 function allArchived(bId) {
