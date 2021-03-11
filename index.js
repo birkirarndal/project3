@@ -83,10 +83,10 @@ app.get("/api/v1/boards/:boardId", (req, res) => {
 // Create new board
 app.post("/api/v1/boards", (req, res) => {
     if(req.body === undefined || req.body.name === undefined || req.body.description === undefined) {
-        // The name and description fields not provided in the body
+        // The name and description fields were not provided in the body
         res.status(400).json({'message': "The name and description fields are required in the request body."});
     } else if(typeof req.body.name !== "string") {
-        // The name field is not a string NOT FUNCTIONA
+        // The name field is not a string
         res.status(400).json({'message': "The name field must be a string."});
     } else if(typeof req.body.description !== "string") {
         // The description field is not a string
@@ -113,18 +113,22 @@ app.put("/api/v1/boards/:boardId", (req, res) => {
         // Board id doesn't exist
         res.status(404).json({'message': "Board with id " + req.params.boardId + " does not exist."});
     } else if(req.body === undefined || req.body.name === undefined || req.body.description === undefined) {
-        // The name and description fields were not provided
+        // The name and description fields were not provided in the body
         res.status(400).json({'message': "The name and description fields are required in the request body."});
     } else if(typeof req.body.name !== "string") {
-        // The name field 
+        // The name field is not a string
         res.status(400).json({'message': "The name field must be a string."});
     } else if(typeof req.body.description !== "string") {
+        // The description field is not a string
         res.status(400).json({'message': "The description field must be a string."});
     } else if(req.body.name === "") {
+        // The name field is an empty string
         res.status(400).json({'message': "The name field cannot be empty."});
     } else if(!allArchived(req.params.boardId)) {
+        // The board has unarchived tasks
         res.status(400).json({'message': "Board with id " + req.params.boardId + " has unarchived tasks."});
     } else {
+        // Updates the board
         boards.get(req.params.boardId).name = req.body.name;
         boards.get(req.params.boardId).description = req.body.description;
         res.status(200).json(boardData(req.params.boardId));
@@ -134,10 +138,13 @@ app.put("/api/v1/boards/:boardId", (req, res) => {
 // Delete a board
 app.delete("/api/v1/boards/:boardId", (req, res) => {
     if(!boards.has(req.params.boardId)) {
+        // Board id doesn't exist
         res.status(404).json({'message': "Board with id " + req.params.boardId + " does not exist."});
     } else if(!allArchived(req.params.boardId)) {
+        // The board has unarchived tasks
         res.status(400).json({'message': "Board with id " + req.params.boardId + " has unarchived tasks."});
     } else {
+        // Deletes the board
         res.status(200).json(boardData(req.params.boardId));
         boards.delete(req.params.boardId);
     }
@@ -155,14 +162,19 @@ app.delete("/api/v1/boards", (req, res) => {
 // Read all tasks for a board
 app.get("/api/v1/boards/:boardId/tasks", (req, res) => {
     if(!boards.has(req.params.boardId)) {
+        // Board id doesn't exist
         res.status(404).json({'message': "Board with id " + req.params.boardId + " does not exist."});
     } else {
+        // Gets all task data for given board
         let resp_tasks = Array.from(boards.get(req.params.boardId).tasks.values()).map(tId=>taskData(tId));
         if(req.query.sort !== undefined) {
+            // Sort query parameter provided
             const checkSet = new Set(["taskName", "dateCreated", "id"]);
             if(!checkSet.has(req.query.sort)) {
+                // Invalid sort query parameter
                 return res.status(400).json({'message': "Can only sort by taskName, dateCreated, or id. Not " + req.query.sort + "."});
             } else {
+                // Valid sort query parameter
                 resp_tasks.sort((a,b)=>((a[req.query.sort] < b[req.query.sort]) ? -1 : ((a[req.query.sort] > b[req.query.sort]) ? 1 : 0)));
             }
         }
@@ -173,12 +185,16 @@ app.get("/api/v1/boards/:boardId/tasks", (req, res) => {
 // Read an individual task
 app.get("/api/v1/boards/:boardId/tasks/:taskId", (req, res) => {
     if(!boards.has(req.params.boardId)) {
+        // Board id doesn't exist
         res.status(404).json({'message': "Board with id " + req.params.boardId + " does not exist."});
     } else if (!tasks.has(req.params.taskId)) {
+        // Task id doesn't exist
         res.status(404).json({'message': "Task with id " + req.params.taskId + " does not exist."});
     } else if (!boards.get(req.params.boardId).tasks.has(req.params.taskId)) {
+        // Board does not have the given task
         res.status(404).json({'message': "Board with id " + req.params.boardId + " has no task with id " + req.params.taskId + "."});
     } else {
+        // Returns tasks data
         res.status(200).json(taskData(req.params.taskId));
     }
 });
@@ -186,10 +202,13 @@ app.get("/api/v1/boards/:boardId/tasks/:taskId", (req, res) => {
 // Create a new task
 app.post("/api/v1/boards/:boardId/tasks", (req, res) => {
     if(!boards.has(req.params.boardId)) {
+        // Board id doesn't exist
         res.status(404).json({'message': "Board with id " + req.params.boardId + " does not exist."});
     } else if(req.body === undefined || req.body.taskName === undefined) {
+        // The taskName field was not provided in the body
         res.status(400).json({'message': "The taskName field is required in the request body."});
     } else if(typeof req.body.taskName !== "string") {
+        // The taskName field is not a string
         res.status(400).json({'message': "The taskName field must be a string."});
     } else {
         boards.get(req.params.boardId).tasks.add(curTaskId.toString());
@@ -208,16 +227,19 @@ app.post("/api/v1/boards/:boardId/tasks", (req, res) => {
 // Delete a task
 app.delete("/api/v1/boards/:boardId/tasks/:taskId", (req, res) => {
     if(!boards.has(req.params.boardId)) {
+        // Board id doesn't exist
         res.status(404).json({'message': "Board with id " + req.params.boardId + " does not exist."});
     } else if (!tasks.has(req.params.taskId)) {
+        // Task id doesn't exist
         res.status(404).json({'message': "Task with id " + req.params.taskId + " does not exist."});
     } else if (!boards.get(req.params.boardId).tasks.has(req.params.taskId)) {
+        // Board does not have the given task
         res.status(404).json({'message': "Board with id " + req.params.boardId + " has no task with id " + req.params.taskId + "."});
     } else {
-        let task = taskData(req.params.taskId);
+        // Deltes the task
+        res.status(200).json(taskData(req.params.taskId));
         tasks.delete(req.params.taskId);
         boards.get(req.params.boardId).tasks.delete(req.params.taskId);
-        res.status(200).json(task);
     }
 });
 
@@ -258,7 +280,7 @@ app.patch("/api/v1/boards/:boardId/tasks/:taskId", (req, res) => {
     }
 });
 
-//Unsuppoerted endpoints
+//Unsupported endpoints
 app.use("*", (req, res) => {
     res.status(405).send("Operation not supported.");
 });
