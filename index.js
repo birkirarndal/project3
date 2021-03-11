@@ -86,15 +86,16 @@ app.post("/api/v1/boards", (req, res) => {
         // The name and description fields not provided in the body
         res.status(400).json({'message': "The name and description fields are required in the request body."});
     } else if(typeof req.body.name !== "string") {
-        // The name field is not a string
+        // The name field is not a string NOT FUNCTIONA
         res.status(400).json({'message': "The name field must be a string."});
     } else if(typeof req.body.description !== "string") {
         // The description field is not a string
         res.status(400).json({'message': "The description field must be a string."});
     } else if(req.body.name === "") {
-        // The 
+        // The name field is an empty string
         res.status(400).json({'message': "The name field cannot be empty."});
     } else {
+        // Creates the board
         boards.set(curBoardId.toString(), {
             id: curBoardId.toString(),
             name: req.body.name,
@@ -109,10 +110,13 @@ app.post("/api/v1/boards", (req, res) => {
 // Update a boards
 app.put("/api/v1/boards/:boardId", (req, res) => {
     if(!boards.has(req.params.boardId)) {
+        // Board id doesn't exist
         res.status(404).json({'message': "Board with id " + req.params.boardId + " does not exist."});
     } else if(req.body === undefined || req.body.name === undefined || req.body.description === undefined) {
+        // The name and description fields were not provided
         res.status(400).json({'message': "The name and description fields are required in the request body."});
     } else if(typeof req.body.name !== "string") {
+        // The name field 
         res.status(400).json({'message': "The name field must be a string."});
     } else if(typeof req.body.description !== "string") {
         res.status(400).json({'message': "The description field must be a string."});
@@ -225,7 +229,7 @@ app.patch("/api/v1/boards/:boardId/tasks/:taskId", (req, res) => {
         res.status(404).json({'message': "Task with id " + req.params.taskId + " does not exist."});
     } else if (!boards.get(req.params.boardId).tasks.has(req.params.taskId)) {
         res.status(404).json({'message': "Board with id " + req.params.boardId + " has no task with id " + req.params.taskId + "."});
-    } else if (req.body === undefined || (req.body.taskName === undefined && req.archived === undefined && req.boardId === undefined)){
+    } else if (req.body === undefined || (req.body.taskName === undefined && req.body.archived === undefined && req.body.boardId === undefined)){
         res.status(400).json({'message': "At least 1 field must be provided."});
     } else {
         if (req.body.taskName !== undefined) {
