@@ -58,8 +58,7 @@ function boardData(bId, withTasks=false) {
     return board;
 }
 
-
-// Read all boards
+// Read all boards 1
 app.get("/api/v1/boards", (req, res) => {
     res.status(200).json(
         Array.from(boards.values()).map((board) => {
@@ -69,7 +68,7 @@ app.get("/api/v1/boards", (req, res) => {
     );
 });
 
-// Read individual board
+// Read individual board 2
 app.get("/api/v1/boards/:boardId", (req, res) => {
     if(boards.has(req.params.boardId)) {
         // Board exists
@@ -80,7 +79,7 @@ app.get("/api/v1/boards/:boardId", (req, res) => {
     }
 });
 
-// Create new board
+// Create new board 3
 app.post("/api/v1/boards", (req, res) => {
     if(req.body === undefined || req.body.name === undefined || req.body.description === undefined) {
         // The name and description fields were not provided in the body
@@ -107,7 +106,7 @@ app.post("/api/v1/boards", (req, res) => {
     }
 });
 
-// Update a boards
+// Update a board 4
 app.put("/api/v1/boards/:boardId", (req, res) => {
     if(!boards.has(req.params.boardId)) {
         // Board id doesn't exist
@@ -135,7 +134,7 @@ app.put("/api/v1/boards/:boardId", (req, res) => {
     }
 });
 
-// Delete a board
+// Delete a board 5
 app.delete("/api/v1/boards/:boardId", (req, res) => {
     if(!boards.has(req.params.boardId)) {
         // Board id doesn't exist
@@ -150,7 +149,7 @@ app.delete("/api/v1/boards/:boardId", (req, res) => {
     }
 });
 
-// Delete all boards
+// Delete all boards 6
 app.delete("/api/v1/boards", (req, res) => {
     res.status(200).json(Array.from(boards.values()).map(board=>boardData(board.id,true)));
     boards = new Map();
@@ -159,7 +158,7 @@ app.delete("/api/v1/boards", (req, res) => {
     curTaskId = 0;
 });
 
-// Read all tasks for a board
+// Read all tasks for a board 7
 app.get("/api/v1/boards/:boardId/tasks", (req, res) => {
     if(!boards.has(req.params.boardId)) {
         // Board id doesn't exist
@@ -182,7 +181,7 @@ app.get("/api/v1/boards/:boardId/tasks", (req, res) => {
     }
 });
 
-// Read an individual task
+// Read an individual task 8
 app.get("/api/v1/boards/:boardId/tasks/:taskId", (req, res) => {
     if(!boards.has(req.params.boardId)) {
         // Board id doesn't exist
@@ -199,7 +198,7 @@ app.get("/api/v1/boards/:boardId/tasks/:taskId", (req, res) => {
     }
 });
 
-// Create a new task
+// Create a new task 9
 app.post("/api/v1/boards/:boardId/tasks", (req, res) => {
     if(!boards.has(req.params.boardId)) {
         // Board id doesn't exist
@@ -211,6 +210,7 @@ app.post("/api/v1/boards/:boardId/tasks", (req, res) => {
         // The taskName field is not a string
         res.status(400).json({'message': "The taskName field must be a string."});
     } else {
+        // Creates the task
         boards.get(req.params.boardId).tasks.add(curTaskId.toString());
         tasks.set(curTaskId.toString(),{
             id: curTaskId.toString(),
@@ -224,7 +224,7 @@ app.post("/api/v1/boards/:boardId/tasks", (req, res) => {
     }
 });
 
-// Delete a task
+// Delete a task 91
 app.delete("/api/v1/boards/:boardId/tasks/:taskId", (req, res) => {
     if(!boards.has(req.params.boardId)) {
         // Board id doesn't exist
@@ -236,40 +236,52 @@ app.delete("/api/v1/boards/:boardId/tasks/:taskId", (req, res) => {
         // Board does not have the given task
         res.status(404).json({'message': "Board with id " + req.params.boardId + " has no task with id " + req.params.taskId + "."});
     } else {
-        // Deltes the task
+        // Deletes the task
         res.status(200).json(taskData(req.params.taskId));
         tasks.delete(req.params.taskId);
         boards.get(req.params.boardId).tasks.delete(req.params.taskId);
     }
 });
 
-// Partially update a task
+// Partially update a task 92
 app.patch("/api/v1/boards/:boardId/tasks/:taskId", (req, res) => {
     if(!boards.has(req.params.boardId)) {
+        // Board id doesn't exist
         res.status(404).json({'message': "Board with id " + req.params.boardId + " does not exist."});
     } else if (!tasks.has(req.params.taskId)) {
+        // Task id doesn't exist
         res.status(404).json({'message': "Task with id " + req.params.taskId + " does not exist."});
     } else if (!boards.get(req.params.boardId).tasks.has(req.params.taskId)) {
+        // Board does not have the given task
         res.status(404).json({'message': "Board with id " + req.params.boardId + " has no task with id " + req.params.taskId + "."});
     } else if (req.body === undefined || (req.body.taskName === undefined && req.body.archived === undefined && req.body.boardId === undefined)){
+        // No field was provided
         res.status(400).json({'message': "At least 1 field must be provided."});
     } else {
+        // Updates the task
         if (req.body.taskName !== undefined) {
+            // The taskName field was provided
             if(typeof req.body.taskName !== "string") {
+                // The taskName field is not a string
                 return res.status(400).json({'message': "The taskName field must be a string."});
             }
             tasks.get(req.params.taskId).taskName = req.body.taskName;
         }
         if (req.body.archived !== undefined) {
-            if(typeof req.body.taskName !== "boolean") {
+            // The archived field was provided
+            if(typeof req.body.archived !== "boolean") {
+                // The archived field is not a boolean
                 return res.status(400).json({'message': "The archived field must be a boolean."});
             }
             tasks.get(req.params.taskId).archived = req.body.archived;
         }
         if (req.body.boardId !== undefined) {
-            if(typeof req.body.taskName !== "string") {
+            // The boardId field was provided
+            if(typeof req.body.boardId !== "string") {
+                // The boardId field is not a string
                 return res.status(400).json({'message': "The boardId field must be a numeric string."});
             } else if(!boards.has(req.body.boardId)) {
+                // Board id doesn't exist
                 return res.status(404).json({'message': "Board with id " + req.body.boardId + " does not exist."});
             }
             tasks.get(req.params.taskId).boardId = req.body.boardId;
@@ -280,7 +292,7 @@ app.patch("/api/v1/boards/:boardId/tasks/:taskId", (req, res) => {
     }
 });
 
-//Unsupported endpoints
+// Unsupported endpoints
 app.use("*", (req, res) => {
     res.status(405).send("Operation not supported.");
 });
